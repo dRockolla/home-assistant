@@ -6,20 +6,20 @@ Provides an interface to the Plex API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.plex/
 """
-import os
 import json
 import logging
+import os
 from datetime import timedelta
 from urllib.parse import urlparse
 
-from homeassistant.loader import get_component
 import homeassistant.util as util
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_NEXT_TRACK, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO)
+    MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PREVIOUS_TRACK, MediaPlayerDevice)
 from homeassistant.const import (
-    DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_PLAYING,
-    STATE_PAUSED, STATE_OFF, STATE_UNKNOWN)
+    DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
+    STATE_UNKNOWN)
+from homeassistant.loader import get_component
 
 REQUIREMENTS = ['plexapi==1.1.0']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -59,7 +59,7 @@ def config_from_file(filename, config=None):
             return {}
 
 
-# pylint: disable=abstract-method, unused-argument
+# pylint: disable=abstract-method
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """ Sets up the plex platform. """
 

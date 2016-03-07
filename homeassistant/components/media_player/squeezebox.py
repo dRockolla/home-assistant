@@ -11,14 +11,12 @@ import telnetlib
 import urllib.parse
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
-    MEDIA_TYPE_MUSIC, DOMAIN)
-
+    DOMAIN, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
-    STATE_IDLE, STATE_PLAYING, STATE_PAUSED, STATE_OFF, STATE_UNKNOWN)
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_IDLE, STATE_OFF,
+    STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +25,6 @@ SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
     SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the squeezebox platform. """
     if not config.get(CONF_HOST):
@@ -138,7 +135,7 @@ class LogitechMediaServer(object):
 class SqueezeBoxDevice(MediaPlayerDevice):
     """ Represents a SqueezeBox device. """
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments, abstract-method
     def __init__(self, lms, player_id):
         super(SqueezeBoxDevice, self).__init__()
         self._lms = lms
@@ -292,7 +289,3 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         """ turn the media player on. """
         self._lms.query(self._id, 'power', '1')
         self.update_ha_state()
-
-    def play_youtube(self, media_id):
-        """ Plays a YouTube media. """
-        raise NotImplementedError()

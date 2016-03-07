@@ -1,14 +1,13 @@
 """
 YAML utility functions.
 """
-from collections import OrderedDict
 import logging
 import os
+from collections import OrderedDict
 
 import yaml
 
 from homeassistant.exceptions import HomeAssistantError
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +18,7 @@ def load_yaml(fname):
         with open(fname, encoding='utf-8') as conf_file:
             # If configuration file is empty YAML returns None
             # We convert that to an empty dict
-            return yaml.load(conf_file) or {}
+            return yaml.safe_load(conf_file) or {}
     except yaml.YAMLError:
         error = 'Error reading YAML configuration file {}'.format(fname)
         _LOGGER.exception(error)
@@ -45,6 +44,6 @@ def _ordered_dict(loader, node):
     return OrderedDict(loader.construct_pairs(node))
 
 
-yaml.add_constructor('!include', _include_yaml)
-yaml.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
-                     _ordered_dict)
+yaml.SafeLoader.add_constructor('!include', _include_yaml)
+yaml.SafeLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+                                _ordered_dict)

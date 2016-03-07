@@ -8,13 +8,14 @@ Tests bootstrap.
 import os
 import tempfile
 import unittest
-from unittest import mock
 
-from homeassistant import core, bootstrap
-from homeassistant.const import __version__
+from homeassistant import bootstrap, loader
+from homeassistant.const import (__version__, CONF_LATITUDE, CONF_LONGITUDE,
+                                 CONF_NAME, CONF_CUSTOMIZE)
 import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity import Entity
 
-from tests.common import mock_detect_location_info
+from tests.common import get_test_home_assistant, MockModule
 
 
 class TestBootstrap(unittest.TestCase):
@@ -33,9 +34,7 @@ class TestBootstrap(unittest.TestCase):
                 fp.write('{}:\n'.format(comp).encode('utf-8'))
             fp.flush()
 
-            with mock.patch('homeassistant.util.location.detect_location_info',
-                            mock_detect_location_info):
-                hass = bootstrap.from_config_file(fp.name)
+            hass = bootstrap.from_config_file(fp.name)
 
             components.append('group')
 
@@ -56,12 +55,13 @@ class TestBootstrap(unittest.TestCase):
             with open(check_file, 'w'):
                 pass
 
-            hass = core.HomeAssistant()
+            hass = get_test_home_assistant()
             hass.config.config_dir = config_dir
 
             self.assertTrue(os.path.isfile(check_file))
             bootstrap.process_ha_config_upgrade(hass)
             self.assertFalse(os.path.isfile(check_file))
+            hass.stop()
 
     def test_not_remove_lib_if_not_upgrade(self):
         with tempfile.TemporaryDirectory() as config_dir:
@@ -77,9 +77,46 @@ class TestBootstrap(unittest.TestCase):
             with open(check_file, 'w'):
                 pass
 
-            hass = core.HomeAssistant()
+            hass = get_test_home_assistant()
             hass.config.config_dir = config_dir
 
             bootstrap.process_ha_config_upgrade(hass)
 
             self.assertTrue(os.path.isfile(check_file))
+            hass.stop()
+
+    def test_entity_customization(self):
+        """ Test entity customization through config """
+        config = {CONF_LATITUDE: 50,
+                  CONF_LONGITUDE: 50,
+                  CONF_NAME: 'Test',
+                  CONF_CUSTOMIZE: {'test.test': {'hidden': True}}}
+
+        hass = get_test_home_assistant()
+
+        bootstrap.process_ha_core_config(hass, config)
+
+        entity = Entity()
+        entity.entity_id = 'test.test'
+        entity.hass = hass
+        entity.update_ha_state()
+
+        state = hass.states.get('test.test')
+
+        self.assertTrue(state.attributes['hidden'])
+        hass.stop()
+
+    def test_handle_setup_circular_dependency(self):
+        hass = get_test_home_assistant()
+
+        loader.set_component('comp_b', MockModule('comp_b', ['comp_a']))
+
+        def setup_a(hass, config):
+            bootstrap.setup_component(hass, 'comp_b')
+            return True
+
+        loader.set_component('comp_a', MockModule('comp_a', setup=setup_a))
+
+        bootstrap.setup_component(hass, 'comp_a')
+        self.assertEqual(['comp_a'], hass.config.components)
+        hass.stop()

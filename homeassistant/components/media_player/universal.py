@@ -7,34 +7,28 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.universal/
 """
 
+import logging
 # pylint: disable=import-error
 from copy import copy
-import logging
-
-from homeassistant.helpers.event import track_state_change
-from homeassistant.helpers.service import call_from_config
-
-from homeassistant.const import (
-    STATE_IDLE, STATE_ON, STATE_OFF, CONF_NAME,
-    ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_MUTE,
-    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK)
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, DOMAIN,
-    SUPPORT_VOLUME_STEP, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
-    SERVICE_PLAY_MEDIA, SERVICE_YOUTUBE_VIDEO,
-    ATTR_SUPPORTED_MEDIA_COMMANDS, ATTR_MEDIA_VOLUME_MUTED,
-    ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_DURATION,
-    ATTR_MEDIA_TITLE, ATTR_MEDIA_ARTIST, ATTR_MEDIA_ALBUM_NAME,
-    ATTR_MEDIA_TRACK, ATTR_MEDIA_SERIES_TITLE, ATTR_MEDIA_ALBUM_ARTIST,
-    ATTR_MEDIA_SEASON, ATTR_MEDIA_EPISODE, ATTR_MEDIA_CHANNEL,
-    ATTR_MEDIA_PLAYLIST, ATTR_APP_ID, ATTR_APP_NAME, ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_SEEK_POSITION)
+    ATTR_APP_ID, ATTR_APP_NAME, ATTR_MEDIA_ALBUM_ARTIST, ATTR_MEDIA_ALBUM_NAME,
+    ATTR_MEDIA_ARTIST, ATTR_MEDIA_CHANNEL, ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE, ATTR_MEDIA_DURATION, ATTR_MEDIA_EPISODE,
+    ATTR_MEDIA_PLAYLIST, ATTR_MEDIA_SEASON, ATTR_MEDIA_SEEK_POSITION,
+    ATTR_MEDIA_SERIES_TITLE, ATTR_MEDIA_TITLE, ATTR_MEDIA_TRACK,
+    ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED,
+    ATTR_SUPPORTED_MEDIA_COMMANDS, DOMAIN, SERVICE_PLAY_MEDIA,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, CONF_NAME, SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE,
+    SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK, SERVICE_TURN_OFF,
+    SERVICE_TURN_ON, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, STATE_IDLE, STATE_OFF, STATE_ON)
+from homeassistant.helpers.event import track_state_change
+from homeassistant.helpers.service import call_from_config
 
 ATTR_ACTIVE_CHILD = 'active_child'
 
@@ -214,15 +208,6 @@ class UniversalMediaPlayer(MediaPlayerDevice):
             return master_state if master_state else STATE_OFF
         else:
             return None
-
-    def _cache_active_child_state(self):
-        """ The state of the active child or None """
-        for child_name in self._children:
-            child_state = self.hass.states.get(child_name)
-            if child_state and child_state.state not in OFF_STATES:
-                self._child_state = child_state
-                return
-        self._child_state = None
 
     @property
     def name(self):
@@ -405,11 +390,6 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         """ Send seek command. """
         data = {ATTR_MEDIA_SEEK_POSITION: position}
         self._call_service(SERVICE_MEDIA_SEEK, data)
-
-    def play_youtube(self, media_id):
-        """ Plays a YouTube media. """
-        data = {'media_id': media_id}
-        self._call_service(SERVICE_YOUTUBE_VIDEO, data)
 
     def play_media(self, media_type, media_id):
         """ Plays a piece of media. """

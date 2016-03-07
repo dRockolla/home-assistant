@@ -7,21 +7,16 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.vera/
 """
 import logging
+
 from requests.exceptions import RequestException
+
 import homeassistant.util.dt as dt_util
-
 from homeassistant.components.switch import SwitchDevice
-
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_TRIPPED,
-    ATTR_ARMED,
-    ATTR_LAST_TRIP_TIME,
-    EVENT_HOMEASSISTANT_STOP,
-    STATE_ON,
-    STATE_OFF)
+    ATTR_ARMED, ATTR_BATTERY_LEVEL, ATTR_LAST_TRIP_TIME, ATTR_TRIPPED,
+    EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON)
 
-REQUIREMENTS = ['pyvera==0.2.7']
+REQUIREMENTS = ['pyvera==0.2.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,8 +97,8 @@ class VeraSwitch(SwitchDevice):
         return self._name
 
     @property
-    def state_attributes(self):
-        attr = super().state_attributes or {}
+    def device_state_attributes(self):
+        attr = {}
 
         if self.vera_device.has_battery:
             attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'

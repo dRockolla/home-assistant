@@ -1,16 +1,17 @@
 """Helpers that help with state related things."""
-from collections import defaultdict
 import json
 import logging
+from collections import defaultdict
 
-from homeassistant.core import State
 import homeassistant.util.dt as dt_util
+from homeassistant.components.media_player import SERVICE_PLAY_MEDIA
+from homeassistant.components.sun import (
+    STATE_ABOVE_HORIZON, STATE_BELOW_HORIZON)
 from homeassistant.const import (
-    STATE_ON, STATE_OFF, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    STATE_PLAYING, STATE_PAUSED, ATTR_ENTITY_ID)
-
-from homeassistant.components.media_player import (SERVICE_PLAY_MEDIA)
+    ATTR_ENTITY_ID, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_TURN_OFF,
+    SERVICE_TURN_ON, STATE_CLOSED, STATE_LOCKED, STATE_OFF, STATE_ON,
+    STATE_OPEN, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, STATE_UNLOCKED)
+from homeassistant.core import State
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,10 +86,26 @@ def reproduce_state(hass, states, blocking=False):
         # We group service calls for entities by service call
         # json used to create a hashable version of dict with maybe lists in it
         key = (service_domain, service,
-               json.dumps(state.attributes, sort_keys=True))
+               json.dumps(dict(state.attributes), sort_keys=True))
         to_call[key].append(state.entity_id)
 
     for (service_domain, service, service_data), entity_ids in to_call.items():
         data = json.loads(service_data)
         data[ATTR_ENTITY_ID] = entity_ids
         hass.services.call(service_domain, service, data, blocking)
+
+
+def state_as_number(state):
+    """Try to coerce our state to a number.
+
+    Raises ValueError if this is not possible.
+    """
+
+    if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON,
+                       STATE_OPEN):
+        return 1
+    elif state.state in (STATE_OFF, STATE_UNLOCKED, STATE_UNKNOWN,
+                         STATE_BELOW_HORIZON, STATE_CLOSED):
+        return 0
+
+    return float(state.state)

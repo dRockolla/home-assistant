@@ -11,8 +11,8 @@ the user has submitted configuration information.
 """
 import logging
 
-from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.const import EVENT_TIME_CHANGED
+from homeassistant.helpers.entity import generate_entity_id
 
 DOMAIN = "configurator"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -141,7 +141,7 @@ class Configurator(object):
 
         state = self.hass.states.get(entity_id)
 
-        new_data = state.attributes
+        new_data = dict(state.attributes)
         new_data[ATTR_ERRORS] = error
 
         self.hass.states.set(entity_id, STATE_CONFIGURE, new_data)

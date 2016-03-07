@@ -7,17 +7,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.firetv/
 """
 import logging
+
 import requests
 
-from homeassistant.const import (
-    STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_OFF,
-    STATE_UNKNOWN, STATE_STANDBY)
-
 from homeassistant.components.media_player import (
-    MediaPlayerDevice,
-    SUPPORT_PAUSE, SUPPORT_VOLUME_SET,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK)
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_SET, MediaPlayerDevice)
+from homeassistant.const import (
+    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY,
+    STATE_UNKNOWN)
 
 SUPPORT_FIRETV = SUPPORT_PAUSE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
@@ -105,6 +103,8 @@ class FireTV(object):
 class FireTVDevice(MediaPlayerDevice):
     """ Represents an Amazon Fire TV device on the network. """
 
+    # pylint: disable=abstract-method
+
     def __init__(self, host, device, name):
         self._firetv = FireTV(host, device)
         self._name = name
@@ -176,15 +176,3 @@ class FireTVDevice(MediaPlayerDevice):
     def media_next_track(self):
         """ Send next track command (results in fast-forward). """
         self._firetv.action('media_next')
-
-    def media_seek(self, position):
-        raise NotImplementedError()
-
-    def mute_volume(self, mute):
-        raise NotImplementedError()
-
-    def play_youtube(self, media_id):
-        raise NotImplementedError()
-
-    def set_volume_level(self, volume):
-        raise NotImplementedError()

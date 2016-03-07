@@ -1,15 +1,11 @@
-"""
-homeassistant.util.color
-~~~~~~~~~~~~~~~~~~~~~~~~
-Color util methods.
-"""
+"""Color util methods."""
 
 
 # Taken from: http://www.cse.unr.edu/~quiroz/inc/colortransforms.py
 # License: Code is given as is. Use at your own risk and discretion.
 # pylint: disable=invalid-name
 def color_RGB_to_xy(R, G, B):
-    """ Convert from RGB color to XY color. """
+    """Convert from RGB color to XY color."""
     if R + G + B == 0:
         return 0, 0
 
@@ -47,22 +43,21 @@ def color_RGB_to_xy(R, G, B):
 
 # taken from
 # https://github.com/benknight/hue-python-rgb-converter/blob/master/rgb_cie.py
+# Copyright (c) 2014 Benjamin Knight / MIT License.
 # pylint: disable=bad-builtin
 def color_xy_brightness_to_RGB(vX, vY, brightness):
-    '''
-    Convert from XYZ to RGB.
-    '''
+    """Convert from XYZ to RGB."""
     brightness /= 255.
     if brightness == 0:
         return (0, 0, 0)
 
     Y = brightness
-    if vY != 0:
-        X = (Y / vY) * vX
-        Z = (Y / vY) * (1 - vX - vY)
-    else:
-        X = 0
-        Z = 0
+
+    if vY == 0:
+        vY += 0.00000000001
+
+    X = (Y / vY) * vX
+    Z = (Y / vY) * (1 - vX - vY)
 
     # Convert to RGB using Wide RGB D65 conversion.
     r = X * 1.612 - Y * 0.203 - Z * 0.302
@@ -87,3 +82,11 @@ def color_xy_brightness_to_RGB(vX, vY, brightness):
     r, g, b = map(lambda x: int(x * 255), [r, g, b])
 
     return (r, g, b)
+
+
+def rgb_hex_to_rgb_list(hex_string):
+    """Return an RGB color value list from a hex color string."""
+    return [int(hex_string[i:i + len(hex_string) // 3], 16)
+            for i in range(0,
+                           len(hex_string),
+                           len(hex_string) // 3)]

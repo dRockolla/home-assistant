@@ -11,7 +11,7 @@ import os
 import csv
 
 from homeassistant.components import (
-    group, discovery, wink, isy994, zwave, insteon_hub)
+    group, discovery, wemo, wink, isy994, zwave, insteon_hub, mysensors)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
@@ -59,11 +59,13 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
+    wemo.DISCOVER_LIGHTS: 'wemo',
     wink.DISCOVER_LIGHTS: 'wink',
-    insteon_hub.DISCOVER_LIGHTS: 'insteon',
+    insteon_hub.DISCOVER_LIGHTS: 'insteon_hub',
     isy994.DISCOVER_LIGHTS: 'isy994',
     discovery.SERVICE_HUE: 'hue',
     zwave.DISCOVER_LIGHTS: 'zwave',
+    mysensors.DISCOVER_LIGHTS: 'mysensors',
 }
 
 PROP_TO_ATTR = {
@@ -301,11 +303,6 @@ class Light(ToggleEntity):
         return None
 
     @property
-    def device_state_attributes(self):
-        """ Returns device specific state attributes. """
-        return None
-
-    @property
     def state_attributes(self):
         """ Returns optional state attributes. """
         data = {}
@@ -321,10 +318,5 @@ class Light(ToggleEntity):
                 data[ATTR_RGB_COLOR] = color_util.color_xy_brightness_to_RGB(
                     data[ATTR_XY_COLOR][0], data[ATTR_XY_COLOR][1],
                     data[ATTR_BRIGHTNESS])
-
-        device_attr = self.device_state_attributes
-
-        if device_attr is not None:
-            data.update(device_attr)
 
         return data

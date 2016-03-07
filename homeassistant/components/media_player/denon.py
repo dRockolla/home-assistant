@@ -6,16 +6,14 @@ Provides an interface to Denon Network Receivers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.denon/
 """
-import telnetlib
 import logging
+import telnetlib
 
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, SUPPORT_PAUSE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_MUTE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
-    DOMAIN)
-from homeassistant.const import (
-    CONF_HOST, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    DOMAIN, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    MediaPlayerDevice)
+from homeassistant.const import CONF_HOST, STATE_OFF, STATE_ON, STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +22,6 @@ SUPPORT_DENON = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """ Sets up the Denon platform. """
     if not config.get(CONF_HOST):
@@ -48,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DenonDevice(MediaPlayerDevice):
     """ Represents a Denon device. """
 
-    # pylint: disable=too-many-public-methods
+    # pylint: disable=too-many-public-methods, abstract-method
 
     def __init__(self, name, host):
         self._name = name
@@ -145,10 +142,6 @@ class DenonDevice(MediaPlayerDevice):
         """ mute (true) or unmute (false) media player. """
         self.telnet_command("MU" + ("ON" if mute else "OFF"))
 
-    def media_play_pause(self):
-        """ media_play_pause media player. """
-        raise NotImplementedError()
-
     def media_play(self):
         """ media_play media player. """
         self.telnet_command("NS9A")
@@ -163,9 +156,6 @@ class DenonDevice(MediaPlayerDevice):
 
     def media_previous_track(self):
         self.telnet_command("NS9E")
-
-    def media_seek(self, position):
-        raise NotImplementedError()
 
     def turn_on(self):
         """ turn the media player on. """

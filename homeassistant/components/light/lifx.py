@@ -8,15 +8,16 @@ https://home-assistant.io/components/light.lifx/
 """
 # pylint: disable=missing-docstring
 
-import logging
 import colorsys
+import logging
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION, Light)
 from homeassistant.helpers.event import track_time_change
-from homeassistant.components.light import \
-    (Light, ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_COLOR_TEMP, ATTR_TRANSITION)
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['liffylights==0.9.0']
+REQUIREMENTS = ['liffylights==0.9.4']
 DEPENDENCIES = []
 
 CONF_SERVER = "server"        # server address configuration item
@@ -58,10 +59,18 @@ class LIFX():
         bulb = self.find_bulb(ipaddr)
 
         if bulb is None:
+            _LOGGER.debug("new bulb %s %s %d %d %d %d %d",
+                          ipaddr, name, power, hue, sat, bri, kel)
             bulb = LIFXLight(self._liffylights, ipaddr, name,
                              power, hue, sat, bri, kel)
             self._devices.append(bulb)
             self._add_devices_callback([bulb])
+        else:
+            _LOGGER.debug("update bulb %s %s %d %d %d %d %d",
+                          ipaddr, name, power, hue, sat, bri, kel)
+            bulb.set_power(power)
+            bulb.set_color(hue, sat, bri, kel)
+            bulb.update_ha_state()
 
     # pylint: disable=too-many-arguments
     def on_color(self, ipaddr, hue, sat, bri, kel):
@@ -95,7 +104,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     lifx_library = LIFX(add_devices_callback, server_addr, broadcast_addr)
 
     # register our poll service
-    track_time_change(hass, lifx_library.poll, second=10)
+    track_time_change(hass, lifx_library.poll, second=[10, 40])
 
     lifx_library.probe()
 

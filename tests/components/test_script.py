@@ -88,8 +88,8 @@ class TestScript(unittest.TestCase):
 
         self.assertEqual(1, len(calls))
         self.assertEqual('world', calls[0].data.get('hello'))
-        self.assertEqual(
-            True, self.hass.states.get(ENTITY_ID).attributes.get('can_cancel'))
+        self.assertIsNone(
+            self.hass.states.get(ENTITY_ID).attributes.get('can_cancel'))
 
     def test_calling_service_old(self):
         calls = []
@@ -174,8 +174,7 @@ class TestScript(unittest.TestCase):
         self.hass.pool.block_till_done()
 
         self.assertTrue(script.is_on(self.hass, ENTITY_ID))
-        self.assertEqual(
-            False,
+        self.assertTrue(
             self.hass.states.get(ENTITY_ID).attributes.get('can_cancel'))
 
         self.assertEqual(
@@ -231,4 +230,74 @@ class TestScript(unittest.TestCase):
 
         self.assertFalse(script.is_on(self.hass, ENTITY_ID))
 
+        self.assertEqual(0, len(calls))
+
+    def test_turn_on_service(self):
+        """
+        Verifies that the turn_on service for a script only turns on scripts
+        that are not currently running.
+        """
+        event = 'test_event'
+        calls = []
+
+        def record_event(event):
+            calls.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        self.assertTrue(script.setup(self.hass, {
+            'script': {
+                'test': {
+                    'sequence': [{
+                        'delay': {
+                            'seconds': 5
+                        }
+                    }, {
+                        'event': event,
+                    }]
+                }
+            }
+        }))
+
+        script.turn_on(self.hass, ENTITY_ID)
+        self.hass.pool.block_till_done()
+        self.assertTrue(script.is_on(self.hass, ENTITY_ID))
+        self.assertEqual(0, len(calls))
+
+        # calling turn_on a second time should not advance the script
+        script.turn_on(self.hass, ENTITY_ID)
+        self.hass.pool.block_till_done()
+        self.assertEqual(0, len(calls))
+
+    def test_toggle_service(self):
+        event = 'test_event'
+        calls = []
+
+        def record_event(event):
+            calls.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        self.assertTrue(script.setup(self.hass, {
+            'script': {
+                'test': {
+                    'sequence': [{
+                        'delay': {
+                            'seconds': 5
+                        }
+                    }, {
+                        'event': event,
+                    }]
+                }
+            }
+        }))
+
+        script.toggle(self.hass, ENTITY_ID)
+        self.hass.pool.block_till_done()
+        self.assertTrue(script.is_on(self.hass, ENTITY_ID))
+        self.assertEqual(0, len(calls))
+
+        script.toggle(self.hass, ENTITY_ID)
+        self.hass.pool.block_till_done()
+        self.assertFalse(script.is_on(self.hass, ENTITY_ID))
         self.assertEqual(0, len(calls))

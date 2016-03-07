@@ -21,7 +21,7 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 # Maps discovered services to their platforms
 DISCOVERY_PLATFORMS = {
-    verisure.DISCOVER_SENSORS: 'verisure'
+    verisure.DISCOVER_ALARMS: 'verisure'
 }
 
 SERVICE_TO_METHOD = {
@@ -61,6 +61,8 @@ def setup(hass, config):
 
         for alarm in target_alarms:
             getattr(alarm, method)(code)
+            if alarm.should_poll:
+                alarm.update_ha_state(True)
 
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))

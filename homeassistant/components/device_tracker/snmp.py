@@ -7,15 +7,15 @@ through SNMP.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.snmp/
 """
-import logging
-from datetime import timedelta
-import threading
 import binascii
+import logging
+import threading
+from datetime import timedelta
 
+from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import validate_config
 from homeassistant.util import Throttle
-from homeassistant.components.device_tracker import DOMAIN
 
 # Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -66,7 +66,8 @@ class SnmpScanner(object):
         """
 
         self._update_info()
-        return [client['mac'] for client in self.last_results]
+        return [client['mac'] for client in self.last_results
+                if client.get('mac')]
 
     # Supressing no-self-use warning
     # pylint: disable=R0201
@@ -111,6 +112,7 @@ class SnmpScanner(object):
         for resrow in restable:
             for _, val in resrow:
                 mac = binascii.hexlify(val.asOctets()).decode('utf-8')
+                _LOGGER.debug('Found mac %s', mac)
                 mac = ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)])
                 devices.append({'mac': mac})
         return devices

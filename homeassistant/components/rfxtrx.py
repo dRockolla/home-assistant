@@ -7,10 +7,11 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rfxtrx/
 """
 import logging
+
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/archive/0.2.zip' +
-                '#RFXtrx==0.2']
+REQUIREMENTS = ['https://github.com/Danielhiversen/pyRFXtrx/' +
+                'archive/0.5.zip#pyRFXtrx==0.5']
 
 DOMAIN = "rfxtrx"
 
@@ -20,6 +21,8 @@ ATTR_STATE = 'state'
 ATTR_NAME = 'name'
 ATTR_PACKETID = 'packetid'
 ATTR_FIREEVENT = 'fire_event'
+ATTR_DATA_TYPE = 'data_type'
+ATTR_DUMMY = "dummy"
 
 EVENT_BUTTON_PRESSED = 'button_pressed'
 
@@ -35,8 +38,9 @@ def setup(hass, config):
     # Declare the Handle event
     def handle_receive(event):
         """ Callback all subscribers for RFXtrx gateway. """
-
         # Log RFXCOM event
+        if not event.device.id_string:
+            return
         entity_id = slugify(event.device.id_string.lower())
         packet_id = "".join("{0:02x}".format(x) for x in event.data)
         entity_name = "%s : %s" % (entity_id, packet_id)
@@ -54,16 +58,22 @@ def setup(hass, config):
     global RFXOBJECT
 
     if ATTR_DEVICE not in config[DOMAIN]:
-        _LOGGER.exception(
-            "can found device parameter in %s YAML configuration section",
+        _LOGGER.error(
+            "can not find device parameter in %s YAML configuration section",
             DOMAIN
         )
         return False
 
     device = config[DOMAIN][ATTR_DEVICE]
     debug = config[DOMAIN].get(ATTR_DEBUG, False)
+    dummy_connection = config[DOMAIN].get(ATTR_DUMMY, False)
 
-    RFXOBJECT = rfxtrxmod.Core(device, handle_receive, debug=debug)
+    if dummy_connection:
+        RFXOBJECT =\
+            rfxtrxmod.Core(device, handle_receive, debug=debug,
+                           transport_protocol=rfxtrxmod.DummyTransport2)
+    else:
+        RFXOBJECT = rfxtrxmod.Core(device, handle_receive, debug=debug)
 
     return True
 
